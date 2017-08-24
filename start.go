@@ -54,7 +54,7 @@ func handleConnection(conn net.Conn, timeout int) {
 		n, err := conn.Read(buffer)
 		if err != nil {
 			lib.Log(conn.RemoteAddr().String(), " connection error: ", err)
-			return
+			break
 		}
 		lib.Log("receive data:", string(buffer))
 		tmpBuffer = lib.Depack(append(tmpBuffer, buffer[:n]...))

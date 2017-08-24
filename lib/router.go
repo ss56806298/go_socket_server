@@ -81,6 +81,9 @@ type RegisterController struct {
 type PushController struct {
 }
 
+type PnumController struct {
+}
+
 /*
 
 	任务分发到控制器上进行分别处理
@@ -106,6 +109,11 @@ func (this *PushController) Excute(message Msg, conn net.Conn) {
 	smessage := imessage.(string)
 	SendMessageToAll(smessage)
 	LogMsg(smessage)
+}
+
+func (this *PnumController) Excute(message Msg, conn net.Conn) {
+	num := CountPool()
+	conn.Write(IntToBytes(num))
 }
 
 func init() {
@@ -141,4 +149,16 @@ func init() {
 		}
 		return false
 	}, &push)
+
+	/*
+		查看在线人数
+		code:1002
+	*/
+	var pnum PnumController
+	Route(func(entry Msg) bool {
+		if entry.Code == 1002 {
+			return true
+		}
+		return false
+	}, &pnum)
 }

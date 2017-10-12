@@ -1,2 +1,2 @@
-host: localhost:33406
-beatinginterval: 1200
+host: 0.0.0.0:33406
+beatinginterval: 400

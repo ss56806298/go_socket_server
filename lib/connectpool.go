@@ -11,12 +11,6 @@ import (
 
 var connpool = make(map[int]net.Conn)
 
-//断开连接
-func Disconnect(conn net.Conn) {
-	conn.Close()
-	DeleteFromPool(conn)
-}
-
 //加入连接池
 func AddToPool(uuid int, conn net.Conn) {
 	connpool[uuid] = conn
@@ -24,14 +18,22 @@ func AddToPool(uuid int, conn net.Conn) {
 }
 
 //剔除连接池
-func DeleteFromPool(conn net.Conn) {
-	for key, value := range connpool {
-		if value == conn {
-			delete(connpool, key)
-			LogNum("online players:", len(connpool))
-			break
-		}
+func DeleteFromPool(uuid int, conn net.Conn) {
+	delete(connpool, uuid)
+	LogNum("online players:", len(connpool))
+}
+
+//检查某个ID的玩家是否在线
+func checkOnline(uuid int) bool {
+	if _, ok := connpool[uuid]; ok {
+		return true
 	}
+	return false
+}
+
+//获取某个ID玩家的连接
+func getOnlineUserConn(uuid int) net.Conn {
+	return connpool[uuid]
 }
 
 //看下链接池的连接数

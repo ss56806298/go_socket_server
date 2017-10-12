@@ -3,7 +3,9 @@ package lib
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/bitly/go-simplejson"
 	"net"
+	"strconv"
 )
 
 //消息接口
@@ -55,21 +57,102 @@ func Route(pred interface{}, controller Controller) {
 	}
 }
 
+//服务器任务分发
+func ServerTaskDeliver(postdata []byte) {
+	//解析Json
+	js, js_err := simplejson.NewJson(postdata)
+	if js_err != nil {
+		Log(js_err)
+		return
+	}
+	num, _ := js.Get("num").Int()
+
+	switch num {
+	//公会聊天的信息
+	case 2:
+		var girudo_member_ids []interface{}
+		girudo_member_ids, _ = js.Get("girudo_member_ids").Array()
+		message, _ := js.Get("message").String()
+
+		//json打包推送信息
+		js_s_client := simplejson.New()
+
+		js_s_client.Set("code", 2)
+		js_s_client.Set("message", message)
+
+		byte_message, _ := js_s_client.Encode()
+
+		for _, member_id := range girudo_member_ids {
+			x, _ := member_id.(json.Number)
+			y, _ := strconv.ParseFloat(string(x), 64)
+
+			member_id_int := int(y)
+
+			if checkOnline(member_id_int) {
+				member_conn := getOnlineUserConn(member_id_int)
+
+				member_conn.Write(byte_message)
+			}
+		}
+		break
+	default:
+		break
+	}
+}
+
 //任务分发
 func TaskDeliver(postdata []byte, conn net.Conn) {
-	for _, v := range routers {
-		pred := v[0]
-		act := v[1]
-		var entermsg Msg
-		err := json.Unmarshal(postdata, &entermsg)
-		if err != nil {
-			Log(err)
-		}
-		if pred.(func(entermsg Msg) bool)(entermsg) {
-			act.(Controller).Excute(entermsg, conn)
-			return
-		}
+	// for _, v := range routers {
+	// pred := v[0]
+	// act := v[1]
+	// var entermsg Msg
+	// err := json.Unmarshal(postdata, &entermsg)
+	//解析Json
+	js, js_err := simplejson.NewJson(postdata)
+	if js_err != nil {
+		Log(js_err)
+		return
 	}
+	// if pred.(func(entermsg Msg) bool)(entermsg) {
+	// 	act.(Controller).Excute(entermsg, conn)
+	// 	return
+	// }
+	code, code_js_err := js.Get("code").Int()
+
+	if code_js_err != nil {
+		Log(code_js_err)
+		return
+	}
+
+	switch code {
+	//公会聊天的信息
+	case 2:
+		girudo_member_ids, _ := js.Get("girudo_member_ids").Array()
+		message, _ := js.Get("message").String()
+
+		//json打包推送信息
+		js_s_client := simplejson.New()
+
+		js_s_client.Set("code", 2)
+		js_s_client.Set("message", message)
+
+		byte_message, _ := js_s_client.Encode()
+
+		for _, member_id := range girudo_member_ids {
+			memer_id_int := member_id.(int)
+
+			if checkOnline(memer_id_int) {
+				member_conn := getOnlineUserConn(memer_id_int)
+
+				member_conn.Write(byte_message)
+			}
+		}
+		break
+	default:
+		conn.Write([]byte("error"))
+		break
+	}
+	// }
 }
 
 type EchoController struct {

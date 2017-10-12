@@ -16,7 +16,6 @@ func HeartBeating(conn net.Conn, readerChannel chan byte, timeout int) {
 		break
 	case <-time.After(time.Second * 5):
 		Log("It's really weird to get Nothing!!!")
-		Disconnect(conn)
 	}
 
 }

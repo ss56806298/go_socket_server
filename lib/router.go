@@ -58,7 +58,7 @@ func Route(pred interface{}, controller Controller) {
 }
 
 //服务器任务分发
-func ServerTaskDeliver(postdata []byte) {
+func ServerTaskDeliver(postdata []byte, conn net.Conn) {
 	//解析Json
 	js, js_err := simplejson.NewJson(postdata)
 	if js_err != nil {
@@ -66,22 +66,19 @@ func ServerTaskDeliver(postdata []byte) {
 		return
 	}
 	num, _ := js.Get("num").Int()
-
 	switch num {
-	//公会聊天的信息
-	case 2:
+	//跑马灯
+	case 1001:
+		message, _ := js.Get("message").String()
+		SendMessageToAll(message)
+		break
+
+	//获取公会在线玩家ID
+	case 1002:
 		var girudo_member_ids []interface{}
 		girudo_member_ids, _ = js.Get("girudo_member_ids").Array()
-		message, _ := js.Get("message").String()
 
-		//json打包推送信息
-		js_s_client := simplejson.New()
-
-		js_s_client.Set("code", 2)
-		js_s_client.Set("message", message)
-
-		byte_message, _ := js_s_client.Encode()
-
+		online_member_ids := make([]int, 0)
 		for _, member_id := range girudo_member_ids {
 			x, _ := member_id.(json.Number)
 			y, _ := strconv.ParseFloat(string(x), 64)
@@ -89,12 +86,70 @@ func ServerTaskDeliver(postdata []byte) {
 			member_id_int := int(y)
 
 			if checkOnline(member_id_int) {
+				online_member_ids = append(online_member_ids, member_id_int)
+			}
+		}
+
+		js_s := simplejson.New()
+		js_s.Set("online_member_ids", online_member_ids)
+
+		byte_message, _ := js_s.Encode()
+		conn.Write(byte_message)
+		break
+
+	//公会相关的信息
+	case 1003:
+		var girudo_member_ids []interface{}
+		girudo_member_ids, _ = js.Get("girudo_member_ids").Array()
+		id, _ := js.Get("id").Int()
+		nickname, _ := js.Get("nickname").String()
+		type_g, _ := js.Get("type").Int()
+		create_time, _ := js.Get("create_time").Int()
+
+		//json打包推送信息
+		js_s_client := simplejson.New()
+
+		js_s_client.Set("code", 2)
+		js_s_client.Set("id", id)
+		js_s_client.Set("nickname", nickname)
+		js_s_client.Set("type_g", type_g)
+		js_s_client.Set("create_time", create_time)
+
+		switch type_g {
+		case 1:
+			message, _ := js.Get("message").String()
+			girudo_class, _ := js.Get("girudo_class").Int()
+
+			js_s_client.Set("message", message)
+			js_s_client.Set("girudo_class", girudo_class)
+			break
+		case 2:
+		case 3:
+		case 4:
+		case 5:
+			break
+		case 6:
+			dungeon_id, _ := js.Get("dungeon_id").String()
+
+			js_s_client.Set("dungeon_id", dungeon_id)
+			break
+		}
+		byte_message, _ := js_s_client.Encode()
+
+		for _, member_id := range girudo_member_ids {
+			x, _ := member_id.(json.Number)
+			y, _ := strconv.ParseFloat(string(x), 64)
+
+			member_id_int := int(y)
+			Log(member_id_int)
+			if checkOnline(member_id_int) {
 				member_conn := getOnlineUserConn(member_id_int)
 
-				member_conn.Write(byte_message)
+				member_conn.Write(Enpack(byte_message))
 			}
 		}
 		break
+
 	default:
 		break
 	}

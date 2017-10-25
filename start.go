@@ -92,7 +92,7 @@ func handleConnection(conn net.Conn, timeout int) {
 				continue
 			}
 		} else if num_err == nil {
-			lib.ServerTaskDeliver(tmpBuffer)
+			lib.ServerTaskDeliver(tmpBuffer, conn)
 			conn.Close()
 		}
 

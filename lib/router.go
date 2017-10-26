@@ -112,16 +112,18 @@ func ServerTaskDeliver(postdata []byte, conn net.Conn) {
 		js_s_client.Set("code", 2)
 		js_s_client.Set("id", id)
 		js_s_client.Set("nickname", nickname)
-		js_s_client.Set("type_g", type_g)
+		js_s_client.Set("type", type_g)
 		js_s_client.Set("create_time", create_time)
 
 		switch type_g {
 		case 1:
 			message, _ := js.Get("message").String()
 			girudo_class, _ := js.Get("girudo_class").Int()
+			user_id, _ := js.Get("user_id").Int()
 
 			js_s_client.Set("message", message)
 			js_s_client.Set("girudo_class", girudo_class)
+			js_s_client.Set("user_id", user_id)
 			break
 		case 2:
 		case 3:

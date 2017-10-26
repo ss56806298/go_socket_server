@@ -84,11 +84,11 @@ func handleConnection(conn net.Conn, timeout int) {
 
 			if code == 1 {
 				//注册成功
-				conn.Write([]byte("success"))
+				conn.Write(lib.Enpack([]byte("success")))
 				go receiveMessage(conn, user_id, timeout)
 				break
 			} else {
-				conn.Write([]byte("register first"))
+				conn.Write(lib.Enpack([]byte("register first")))
 				continue
 			}
 		} else if num_err == nil {

@@ -143,13 +143,31 @@ func ServerTaskDeliver(postdata []byte, conn net.Conn) {
 			y, _ := strconv.ParseFloat(string(x), 64)
 
 			member_id_int := int(y)
-			Log(member_id_int)
+
 			if checkOnline(member_id_int) {
 				member_conn := getOnlineUserConn(member_id_int)
-
 				member_conn.Write(Enpack(byte_message))
 			}
 		}
+		break
+
+	//全服聊天
+	case 1004:
+		message, _ := js.Get("message").String()
+		nickname, _ := js.Get("nickname").String()
+		user_id, _ := js.Get("user_id").Int()
+
+		//json打包推送信息
+		js_s_client := simplejson.New()
+
+		js_s_client.Set("code", 3)
+		js_s_client.Set("message", message)
+		js_s_client.Set("nickname", nickname)
+		js_s_client.Set("user_id", user_id)
+
+		byte_message, _ := js_s_client.Encode()
+
+		SendToAll(byte_message)
 		break
 
 	default:

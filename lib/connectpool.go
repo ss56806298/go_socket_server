@@ -60,6 +60,12 @@ func SendMessageToAll(message string) {
 	}
 }
 
+func SendToAll(message []byte) {
+	for _, conn := range connpool {
+		conn.Write(Enpack(message))
+	}
+}
+
 //跑马灯的结构体
 type Announcement struct {
 	Code    int    `json:"code"`

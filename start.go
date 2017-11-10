@@ -47,7 +47,7 @@ func handleConnection(conn net.Conn, timeout int) {
 	//缓冲区数据
 	tmpBuffer := make([]byte, 0)
 	//客户端提交的数据限制在32字节以内
-	buffer := make([]byte, 300)
+	buffer := make([]byte, 512)
 
 	// messager := make(chan byte)
 
